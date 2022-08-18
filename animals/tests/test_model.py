@@ -1,102 +1,76 @@
-from animals.models import Animal
-from django.core.exceptions import ValidationError
 from django.test import TestCase
-from groups.models import Group
+from animals.models import Animal
 from traits.models import Trait
+from groups.models import Group
+from django.core.exceptions import ValidationError
 
 
-class AnimalTest(TestCase):
+class AnimalModelTest(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
-
-        cls.animal_1_data = {
-            "name": "Beethoven",
-            "age": 1,
+        
+        cls.animal_data = {
+            "name": "odin",
+            "age": 2,
             "weight": 30,
             "sex": "Macho",
-            "group": {"name": "cão", "scientific_name": "canis familiaris"},
-            "traits": [{"name": "peludo"}, {"name": "médio porte"}],
         }
 
-        cls.animal_2_data = {
-            "name": "Beethoven",
-            "age": 1,
-            "weight": 30,
-            "group": {"name": "cão", "scientific_name": "canis familiaris"},
-            "traits": [{"name": "peludo"}, {"name": "médio porte"}],
+        cls.animal_data_2 = {
+            "name": "thor",
+            "age": 4,
+            "weight": 20,
+            "sex": "Invalido",
         }
 
-        cls.animal_3_data = {
-            "name": "Beethoven",
-            "age": 1,
-            "weight": 30,
-            "sex": "Sex Invalido",
+        cls.group_data = {
+            "name": "cão", 
+            "scientific_name": "canis familiaris"
         }
 
-        cls.sex_default = "Não informado"
+        cls.traits_data_1 = {
+            "name": "peludo"
+        }
 
-        cls.animal_1 = Animal.objects.create(**cls.animal_1_data)
-        cls.animal_2 = Animal.objects.create(**cls.animal_2_data)
-        cls.animal_3 = Animal(**cls.animal_3_data)
+        cls.traits_data_2 = {
+            "name": "médio porte"
+        }
 
-        cls.animals = [Animal.objects.create(cache=50000) for _ in range(20)]
-        cls.group = Group.objects.create(name="cão", scientific_name="canis familiaris")
+        cls.trait_1 = Trait.objects.create(**cls.traits_data_1)
+        cls.trait_2 = Trait.objects.create(**cls.traits_data_2)
+        cls.group = Group.objects.create(**cls.group_data)
+        cls.animal = Animal.objects.create(**cls.animal_data, group=cls.group)
+        cls.animal_2 = Animal.objects.create(**cls.animal_data_2, group=cls.group)
 
-        cls.trait = Trait.objects.create(name="trat 1")
+    def test_animal_fields(self):
+        print("Test for animal fields")
 
+        self.assertEqual(self.animal_data["name"], self.animal.name)
+        self.assertEqual(self.animal_data["age"], self.animal.age)
+        self.assertEqual(self.animal_data["weight"], self.animal.weight)
+        self.assertEqual(self.animal_data["sex"], self.animal.sex)
+    
 
-        def test_name_max_length(self):
-            max_length = self.animal_1._meta.get_field("name").max_length
-            self.assertEquals(max_length, 50)
+    def test_animal_fields_parameters(self):
+        print("Test for animal fields parameters")
 
-        def test_sex_default_choice(self):
-            sex_default = self.animal_2.sex
+        animal_test_1 = Animal.objects.get(id = 1)
+        name_max_length = animal_test_1._meta.get_field('name').max_length
+        sex_max_length = animal_test_1._meta.get_field('sex').max_length 
+        weight_max_digits = animal_test_1._meta.get_field('weight').max_digits
 
-            self.assertEqual(sex_default, self.sex_default)
+        self.assertEqual(name_max_length, 50) 
+        self.assertEqual(sex_max_length, 15) 
+        self.assertEqual(weight_max_digits, 6)
 
-        def test_sex_wrong_choice(self):
-            self.assertRaises(ValidationError, self.aniaml_3.full_clean)
+    def test_animal_sex_invalid_choice(self):
+        print("Test for animal sex invalid choice")
 
-        # test 1:n
-        def test_group_may_contain_multiple_animals(self):
-            # loop para verificar a quantidade de filmes que a companhia tem se é a mesma quantidade de filmes criados.
-            for animal in self.animals:
-                animal.group = self.group
-                animal.save()
+        self.assertRaises(ValidationError, self.animal_2.full_clean)
+    
+    def test_animal_may_contain_several_traits(self):
+        print("Test for animal may contain several traits")
+        self.animal.traits.set([self.trait_1, self.trait_2])
 
-            self.assertEquals(len(self.animals), self.group.animals.count())
-
-            # loop para verificar se o group de cada animal é o mesmo para todos.
-            for animal in self.animals:
-                self.assertIs(animal.group, self.group)
-
-        def test_animal_cannot_belong_to_more_than_one_group(self):
-            for animal in self.animals:
-                animal.group = self.group
-                animal.save()
-
-            group_2 = Group.objects.create(
-                name="cão 2", scientific_name="canis familiaris 2"
-            )
-
-            # Percorrendo o loop, estamos atualizando a instância de cada aniaml passando um novo group
-            for animal in self.animals:
-                animal.group = group_2
-                animal.save()
-
-            # Aqui estamos verificando se os aniamis não estão presentes no primeirao group.
-            # Alem de analisamos se os animais estão presentes no segundo group.
-            for animal in self.animals:
-                self.assertNotIn(animal, self.group.animals.all())
-                self.assertIn(animal, group_2.animals.all())
-
-        # test n:n
-        def test_trait_can_be_attached_to_multiple_animals(self):
-
-            for animal in self.animals:
-                self.trait.animals.add(animal)
-
-            self.assertEquals(len(self.animals), self.trait.animals.count())
-
-            for animal in self.animals:
-                self.assertIn(self.trait, animal.traits.all())
+        self.assertEquals(self.animal.traits.count(), 2)
+        self.assertIn(self.trait_1 and self.trait_2, self.animal.traits.all())

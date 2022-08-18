@@ -17,8 +17,7 @@ class Animal(models.Model):
         max_length=15, choices=SexAnimal.choices, default=SexAnimal.OTHER
     )
 
-    group = models.ForeignKey(
-        "groups.Group", on_delete=models.CASCADE, related_name="animals")
+    group = models.ForeignKey("groups.Group", on_delete=models.CASCADE, related_name="animals")
     traits = models.ManyToManyField("traits.trait", related_name="animals")
 
     def __repr__(self) -> str:
