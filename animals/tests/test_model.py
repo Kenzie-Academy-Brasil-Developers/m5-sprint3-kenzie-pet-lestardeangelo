@@ -10,21 +10,21 @@ class AnimalModelTest(TestCase):
     def setUpTestData(cls) -> None:
         
         cls.animal_data = {
-            "name": "odin",
+            "name": "carlos",
             "age": 2,
             "weight": 30,
             "sex": "Macho",
         }
 
         cls.animal_data_2 = {
-            "name": "thor",
+            "name": "kai",
             "age": 4,
             "weight": 20,
             "sex": "Invalido",
         }
 
         cls.group_data = {
-            "name": "cão", 
+            "name": "arnaldo", 
             "scientific_name": "canis familiaris"
         }
 
