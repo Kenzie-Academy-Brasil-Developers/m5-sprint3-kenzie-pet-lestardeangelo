@@ -1,5 +1,4 @@
 from functools import cache
-
 from animals.models import Animal
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -25,7 +24,7 @@ class GroupTestCase(TestCase):
             "scientific_name": "canis familiaris"
         }
 
-        cls.group = Group.objects.create(**cls.correct_group_data)
+        cls.group:Group = Group.objects.create(**cls.correct_group_data)
 
     def test_group_properties(self) -> None: 
 
